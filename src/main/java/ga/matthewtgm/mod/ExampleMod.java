@@ -17,7 +17,7 @@ public class ExampleMod {
 
     @Mod.EventHandler
     protected void onPreInit(FMLPreInitializationEvent event) {
-        
+
     }
 
 }

@@ -1,51 +1,85 @@
-buildscript {
+ buildscript {
     repositories {
+        mavenCentral()
         jcenter()
+
         maven {
-            name = "forge"
-            url = "http://files.minecraftforge.net/maven"
+            name = "Forge"
+            url = "http://maven.minecraftforge.net"
+        }
+        maven {
+            name = "JitPack"
+            url = "https://jitpack.io"
         }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
+        classpath 'com.github.asbyth:ForgeGradle:f6500bf402'
         classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.4'
     }
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'com.github.johnrengelman.shadow'
 
-version = "1.0"
-group= "ga.matthewtgm.mod"
-archivesBaseName = "Mod Name In Full"
+archivesBaseName = project.mod_name
+version = project.mod_ver
+group= project.group
 
 sourceCompatibility = targetCompatibility = 1.8
 
+Dependency[] modDeps = [
+    new Dependency("com.github.TGMDevelopment", "JsonTGM", "${project.deps_jsontgm_ver}", true, (String)["gson"]),
+    new Dependency("com.github.TGMDevelopment", "TGMConfig", "${project.deps_tgmconfig_ver}", true)
+]
+
 minecraft {
-    version = "1.8.9-11.15.1.2318-1.8.9"
-    runDir = "run"
+    version = project.forge_ver
+    runDir = project.minecraft_run_dir
 	
-	replace("@VER@", project.version)
+	replace("@VER@", project.mod_ver)
 	
-    mappings = "stable_22"
+    mappings = project.minecraft_mappings
 }
 
 repositories {
     jcenter()
-    maven { url "https://jitpack.io" }
+    maven {
+        name = "JitPack"
+        url = "https://jitpack.io"
+    }
 }
 
 dependencies {
-    compile('com.github.TGMDevelopment:JsonTGM:0.2.3')
+    for (Dependency dependency : modDeps) {
+        compile(dependency.fullDep) {
+            if (dependency.excluded.length > 0) {
+                for (String excluded : dependency.excluded) {
+                    exclude module: excluded
+                }
+            }
+        }
+
+        if (dependency.annotationProc) {
+            annotationProcessor(dependency.fullDep)
+        }
+    }
+
+    compile(files("libs/${project.deps_tgmlib}.jar"))
 }
 
 shadowJar {
     dependencies {
-        include(dependency('com.github.TGMDevelopment:JsonTGM:0.2.3'))
+        for (Dependency dep : modDeps) {
+            if (dep.shade) {
+                include(dependency(dep.fullDep))
+            }
+        }
     }
 
-    exclude('dummyThing')
+    exclude("dummyThing")
+    exclude("module-info.class")
+    exclude("${project.deps_tgmlib}.jar")
 
-    classifier = "working"
+    classifier = project.mod_classifier
 }
 
 reobf {
@@ -54,18 +88,11 @@ reobf {
     }
 }
 
-sourceSets {
-    main {
-        output.resourcesDir = output.classesDir
-    }
-}
-
 jar {
     DuplicatesStrategy.EXCLUDE
 }
 
-processResources
-{
+processResources {
     inputs.property "version", project.version
     inputs.property "mcversion", project.minecraft.version
 
@@ -74,10 +101,65 @@ processResources
                 
         expand 'version':project.version, 'mcversion':project.minecraft.version
     }
-        
+
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
     }
 }
 
 tasks.reobfJar.dependsOn(tasks.shadowJar)
+
+/* Custom dependency stuff. */
+@SuppressWarnings("unused")
+class Dependency {
+
+    String group
+    String name
+    String version
+    String[] excluded
+    boolean shade
+    boolean annotationProc
+    final String fullDep
+
+    Dependency(String group, String name, String version, boolean shade) {
+        this.group = group
+        this.name = name
+        this.version = version
+        this.shade = shade
+        this.excluded = []
+        this.annotationProc = false
+
+        this.fullDep = group + ":" + name + ":" + version
+    }
+    Dependency(String group, String name, String version, boolean shade, String[] excluded) {
+        this.group = group
+        this.name = name
+        this.version = version
+        this.shade = shade
+        this.excluded = excluded
+        this.annotationProc = false
+
+        this.fullDep = group + ":" + name + ":" + version
+    }
+    Dependency(String group, String name, String version, boolean shade, boolean annotationProc) {
+        this.group = group
+        this.name = name
+        this.version = version
+        this.shade = shade
+        this.excluded = []
+        this.annotationProc = annotationProc
+
+        this.fullDep = group + ":" + name + ":" + version
+    }
+    Dependency(String group, String name, String version, boolean shade, String[] excluded, boolean annotationProc) {
+        this.group = group
+        this.name = name
+        this.version = version
+        this.shade = shade
+        this.excluded = excluded
+        this.annotationProc = annotationProc
+
+        this.fullDep = group + ":" + name + ":" + version
+    }
+
+}

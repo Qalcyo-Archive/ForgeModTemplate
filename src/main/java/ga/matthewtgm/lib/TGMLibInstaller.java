@@ -13,7 +13,7 @@
     # GNU General Public License for more details.
     #
     # You should have received a copy of the GNU General Public License
-    # along with dogtag.  If not, see <http://www.gnu.org/licenses/>.
+    # along with TGMLib. If not, see <http://www.gnu.org/licenses/>.
 */
 
 package ga.matthewtgm.lib;
@@ -22,8 +22,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -76,29 +76,8 @@ public class TGMLibInstaller {
 
         File metaFile = new File(dataDir, "meta.json");
 
-        if (!metaFile.exists()) {
-            BufferedWriter writer = null;
-            try {
-                metaFile.createNewFile();
-                writer = new BufferedWriter(new FileWriter(metaFile));
-                writer.write("{\"current\": \"" + versionsJson.get("latest").getAsString() + "\"}");
-            } catch (IOException e) {
-                e.printStackTrace();
-                try {
-                    writer.flush();
-                    writer.close();
-                } catch (Exception e1) {
-                    e1.printStackTrace();
-                }
-            } finally {
-                try {
-                    writer.flush();
-                    writer.close();
-                } catch (Exception e1) {
-                    e1.printStackTrace();
-                }
-            }
-        }
+        if (!metaFile.exists() || !metaFile.isFile())
+            createAndUpdateMetaFile(metaFile, versionsJson);
 
         JsonObject localMetadataJson = gson.fromJson(readJsonFromFile(new File(dataDir, "meta.json")), JsonObject.class);
 
@@ -118,12 +97,39 @@ public class TGMLibInstaller {
                 return ReturnValue.FAILED;
         }
 
+        createAndUpdateMetaFile(metaFile, versionsJson);
+
         addToClasspath(tgmLibFile);
 
         if (!isInitialized())
             return ReturnValue.FAILED;
 
         return ReturnValue.SUCCESSFUL;
+    }
+
+    private static void createAndUpdateMetaFile(File metaFile, JsonObject versionsJson) {
+        BufferedWriter writer = null;
+        try {
+            if (!metaFile.exists() || !metaFile.isFile())
+                metaFile.createNewFile();
+            writer = new BufferedWriter(new FileWriter(metaFile));
+            writer.write("{\"current\": \"" + versionsJson.get("latest").getAsString() + "\"}");
+        } catch (IOException e) {
+            e.printStackTrace();
+            try {
+                writer.flush();
+                writer.close();
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+        } finally {
+            try {
+                writer.flush();
+                writer.close();
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+        }
     }
 
     private static boolean download(String url, String version, File file, JsonObject versionData) {
@@ -168,7 +174,7 @@ public class TGMLibInstaller {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
-
+        LogManager.getLogger("TGMLibInstaller").info("Downloading TGMLib...");
 
         HttpURLConnection connection = null;
         try (FileOutputStream fout = new FileOutputStream(file)) {
@@ -191,7 +197,6 @@ public class TGMLibInstaller {
                 fout.write(buffer, 0, read);
                 progressBar.setValue(progressBar.getValue() + 1024);
             }
-            FileUtils.write(new File(dataDir, "meta.json"), versionData.getAsString());
         } catch (Exception e) {
             if (!(e instanceof UnsupportedOperationException))
                 e.printStackTrace();
@@ -201,6 +206,8 @@ public class TGMLibInstaller {
             if (connection != null)
                 connection.disconnect();
         }
+
+        LogManager.getLogger("TGMLibInstaller").info("Finished downloading TGMLib!");
 
         frame.dispose();
         return true;

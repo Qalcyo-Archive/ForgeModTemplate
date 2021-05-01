@@ -27,8 +27,9 @@ group= project.group
 sourceCompatibility = targetCompatibility = 1.8
 
 Dependency[] modDeps = [
-    new Dependency("com.github.TGMDevelopment", "JsonTGM", "${project.deps_jsontgm_ver}", true, (String)["gson"]),
-    new Dependency("com.github.TGMDevelopment", "TGMConfig", "${project.deps_tgmconfig_ver}", true)
+    new Dependency("com.github.TGMDevelopment", "JsonTGM", "${project.deps_jsontgm_ver}", true, (String[])["gson"]),
+    new Dependency("com.github.TGMDevelopment", "TGMConfig", "${project.deps_tgmconfig_ver}", true),
+    new Dependency("org.projectlombok", "lombok", "1.18.16", false, true)
 ]
 
 minecraft {

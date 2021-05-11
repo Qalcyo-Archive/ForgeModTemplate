@@ -51,7 +51,6 @@ public class TGMLibInstaller {
             Field invalidClasses = LaunchClassLoader.class.getDeclaredField("invalidClasses");
             if (!invalidClasses.isAccessible())
                 invalidClasses.setAccessible(true);
-            System.out.println(invalidClasses);
             Object obj = invalidClasses.get(Launch.classLoader);
             ((Set<String>) obj).remove(className);
             return Class.forName("ga.matthewtgm.lib.TGMLib") != null;
@@ -63,14 +62,12 @@ public class TGMLibInstaller {
 
     public static ReturnValue initialize(File gameDir) {
         if (isInitialized())
-            return ReturnValue.FAILED;
+            return ReturnValue.ALREADY_INITIALIZED;
 
         dataDir = new File(gameDir, "TGMLib");
-        if (!dataDir.exists() || !dataDir.isDirectory()) {
-            if (!dataDir.mkdirs()) {
-                return ReturnValue.ERRORED;
-            }
-        }
+        if (!dataDir.exists() || !dataDir.isDirectory())
+            if (!dataDir.mkdirs())
+                return ReturnValue.FAILED;
 
         JsonObject versionsJson = gson.fromJson(fetchJson(versions_url), JsonObject.class);
 
@@ -81,17 +78,13 @@ public class TGMLibInstaller {
 
         JsonObject localMetadataJson = gson.fromJson(readJsonFromFile(new File(dataDir, "meta.json")), JsonObject.class);
 
-        System.out.println(localMetadataJson);
-
-
         File tgmLibFile = new File(dataDir, "TGMLib-" + versionsJson.get("latest").getAsString() + ".jar");
 
         if (!tgmLibFile.exists()) {
             File old = new File(dataDir, "TGMLib-" + localMetadataJson.get("current").getAsString() + ".jar");
             if (old.exists())
-                old.delete();
-
-            System.out.println(versionsJson);
+                if (!old.delete())
+                    return ReturnValue.FAILED;
 
             if (!download("https://raw.githubusercontent.com/TGMDevelopment/TGMLib-Data/main/downloads/TGMLib-" + versionsJson.get("latest").getAsString() + ".jar", versionsJson.get("latest").getAsString(), tgmLibFile, versionsJson))
                 return ReturnValue.FAILED;
@@ -103,7 +96,6 @@ public class TGMLibInstaller {
 
         if (!isInitialized())
             return ReturnValue.FAILED;
-
         return ReturnValue.SUCCESSFUL;
     }
 
@@ -260,6 +252,7 @@ public class TGMLibInstaller {
     }
 
     public enum ReturnValue {
+        ALREADY_INITIALIZED,
         FAILED,
         ERRORED,
         SUCCESSFUL

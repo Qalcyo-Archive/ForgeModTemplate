@@ -27,6 +27,7 @@ group= project.group
 sourceCompatibility = targetCompatibility = 1.8
 
 Dependency[] modDeps = [
+    new Dependency("com.github.TGMDevelopment", "TGMLib", "${project.deps_tgmlib_ver}", false, (String[])["mixin"]),
     new Dependency("com.github.TGMDevelopment", "JsonTGM", "${project.deps_jsontgm_ver}", true, (String[])["gson"]),
     new Dependency("com.github.TGMDevelopment", "TGMConfig", "${project.deps_tgmconfig_ver}", true),
     new Dependency("org.projectlombok", "lombok", "1.18.16", false, true)
@@ -63,8 +64,6 @@ dependencies {
             annotationProcessor(dependency.fullDep)
         }
     }
-
-    compile(files("libs/${project.deps_tgmlib}.jar"))
 }
 
 shadowJar {
@@ -78,7 +77,6 @@ shadowJar {
 
     exclude("dummyThing")
     exclude("module-info.class")
-    exclude("${project.deps_tgmlib}.jar")
 
     classifier = project.mod_classifier
 }

@@ -1,6 +1,6 @@
-package ga.matthewtgm.template.forge;
+package xyz.matthewtgm.template.forge;
 
-import ga.matthewtgm.lib.TGMLibInstaller;
+import xyz.matthewtgm.lib.TGMLibInstaller;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 

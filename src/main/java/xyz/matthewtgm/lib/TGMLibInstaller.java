@@ -1,22 +1,22 @@
 /*
-    # Copyright (C) MatthewTGM
-    # This file is part of TGMLib <https://github.com/TGMDevelopment/TGMLib>.
-    #
-    # TGMLib is free software: you can redistribute it and/or modify
-    # it under the terms of the GNU General Public License as published by
-    # the Free Software Foundation, either version 3 of the License, or
-    # (at your option) any later version.
-    #
-    # TGMLib is distributed in the hope that it will be useful,
-    # but WITHOUT ANY WARRANTY; without even the implied warranty of
-    # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    # GNU General Public License for more details.
-    #
-    # You should have received a copy of the GNU General Public License
-    # along with TGMLib. If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (C) MatthewTGM
+ * This file is part of Terbium <https://github.com/TGMDevelopment/Terbium-Forge>.
+ *
+ * Terbium is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Terbium is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Terbium. If not, see <http://www.gnu.org/licenses/>.
+ */
 
-package ga.matthewtgm.lib;
+package xyz.matthewtgm.lib;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -42,7 +42,7 @@ public class TGMLibInstaller {
     private static final Gson gson = new Gson();
 
     private static final String versions_url = "https://raw.githubusercontent.com/TGMDevelopment/TGMLib-Data/main/versions.json";
-    private static final String className = "ga.matthewtgm.lib.TGMLib";
+    private static final String className = "xyz.matthewtgm.lib.TGMLib";
     private static File dataDir;
 
     public static boolean isInitialized() {
@@ -53,7 +53,7 @@ public class TGMLibInstaller {
                 invalidClasses.setAccessible(true);
             Object obj = invalidClasses.get(Launch.classLoader);
             ((Set<String>) obj).remove(className);
-            return Class.forName("ga.matthewtgm.lib.TGMLib") != null;
+            return Class.forName(className) != null;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -86,7 +86,7 @@ public class TGMLibInstaller {
                 if (!old.delete())
                     return ReturnValue.FAILED;
 
-            if (!download("https://raw.githubusercontent.com/TGMDevelopment/TGMLib-Data/main/downloads/TGMLib-" + versionsJson.get("latest").getAsString() + ".jar", versionsJson.get("latest").getAsString(), tgmLibFile, versionsJson))
+            if (!download("https://raw.githubusercontent.com/TGMDevelopment/TGMLib-Data/main/downloads/TGMLib-" + versionsJson.get("latest").getAsString() + ".jar", versionsJson.get("latest").getAsString(), tgmLibFile))
                 return ReturnValue.FAILED;
         }
 
@@ -124,8 +124,10 @@ public class TGMLibInstaller {
         }
     }
 
-    private static boolean download(String url, String version, File file, JsonObject versionData) {
+    private static boolean download(String url, String version, File file) {
         url = url.replace(" ", "%20");
+
+        LogManager.getLogger("TGMLibInstaller").info("Downloading TGMLib...\n(URL: " + url + ")");
 
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -165,8 +167,6 @@ public class TGMLibInstaller {
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-
-        LogManager.getLogger("TGMLibInstaller").info("Downloading TGMLib...");
 
         HttpURLConnection connection = null;
         try (FileOutputStream fout = new FileOutputStream(file)) {

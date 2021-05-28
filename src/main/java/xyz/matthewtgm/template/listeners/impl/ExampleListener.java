@@ -1,6 +1,6 @@
-package ga.matthewtgm.template.listeners.impl;
+package xyz.matthewtgm.template.listeners.impl;
 
-import ga.matthewtgm.template.listeners.TemplateListener;
+import xyz.matthewtgm.template.listeners.TemplateListener;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 

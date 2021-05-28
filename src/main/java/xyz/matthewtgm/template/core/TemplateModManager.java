@@ -1,7 +1,7 @@
-package ga.matthewtgm.template.core;
+package xyz.matthewtgm.template.core;
 
-import ga.matthewtgm.lib.other.StandardVersionChecker;
-import ga.matthewtgm.template.TemplateMod;
+import xyz.matthewtgm.lib.other.StandardVersionChecker;
+import xyz.matthewtgm.template.TemplateMod;
 import lombok.Getter;
 
 import java.awt.*;

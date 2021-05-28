@@ -1,9 +1,9 @@
-package ga.matthewtgm.template;
+package xyz.matthewtgm.template;
 
-import ga.matthewtgm.lib.util.ForgeUtils;
-import ga.matthewtgm.lib.util.Notifications;
-import ga.matthewtgm.template.core.TemplateModManager;
-import ga.matthewtgm.template.listeners.impl.ExampleListener;
+import xyz.matthewtgm.lib.util.ForgeUtils;
+import xyz.matthewtgm.lib.util.Notifications;
+import xyz.matthewtgm.template.core.TemplateModManager;
+import xyz.matthewtgm.template.listeners.impl.ExampleListener;
 import lombok.Getter;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;

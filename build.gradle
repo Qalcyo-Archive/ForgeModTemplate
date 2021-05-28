@@ -1,8 +1,6 @@
- buildscript {
+buildscript {
     repositories {
-        mavenCentral()
         jcenter()
-
         maven {
             name = "Forge"
             url = "http://maven.minecraftforge.net"
@@ -11,94 +9,107 @@
             name = "JitPack"
             url = "https://jitpack.io"
         }
+        maven {
+            name = "Sponge"
+            url = "https://repo.spongepowered.org/maven/"
+        }
     }
     dependencies {
         classpath 'com.github.asbyth:ForgeGradle:f6500bf402'
-        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.4'
+        classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
     }
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
-apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'org.spongepowered.mixin'
 
-archivesBaseName = project.mod_name
 version = project.mod_ver
-group= project.group
+group = project.mod_group
+archivesBaseName = project.mod_name
 
 sourceCompatibility = targetCompatibility = 1.8
 
-Dependency[] modDeps = [
-    new Dependency("com.github.TGMDevelopment", "TGMLib", "${project.deps_tgmlib_ver}", false, (String[])["mixin"]),
-    new Dependency("com.github.TGMDevelopment", "JsonTGM", "${project.deps_jsontgm_ver}", true, (String[])["gson"]),
-    new Dependency("com.github.TGMDevelopment", "TGMConfig", "${project.deps_tgmconfig_ver}", true),
-    new Dependency("org.projectlombok", "lombok", "1.18.16", false, true)
+Dependency[] deps = [
+        // Required
+        new Dependency("xyz.matthewtgm", "TGMLib", "1.3", false, (String[])["mixin"]),
+        new Dependency("xyz.matthewtgm", "JsonTGM", "1.2", true, (String[])["gson"]),
+        new Dependency("xyz.matthewtgm", "TGMConfig", "1.5", true),
+        new Dependency("org.projectlombok", "lombok", "1.18.16", false, true)
 ]
 
 minecraft {
     version = project.forge_ver
-    runDir = project.minecraft_run_dir
-	
-	replace("@VER@", project.mod_ver)
-	
-    mappings = project.minecraft_mappings
+    runDir = "run"
+
+    replace("@VER@": project.version)
+
+    mappings = project.mc_mappings
 }
 
 repositories {
-    jcenter()
+    maven {
+        name = "SpongePowered"
+        url = 'https://repo.spongepowered.org/maven/'
+    }
     maven {
         name = "JitPack"
-        url = "https://jitpack.io"
+        url = 'https://jitpack.io'
     }
+    mavenCentral()
+    jcenter()
+}
+
+configurations {
+    embed
 }
 
 dependencies {
-    for (Dependency dependency : modDeps) {
-        compile(dependency.fullDep) {
-            if (dependency.excluded.length > 0) {
-                for (String excluded : dependency.excluded) {
+    for (Dependency dep : deps) {
+        if (dep.isShade()) embed(dep.getFullDep()) {
+            if (dep.getExcluded() != null && dep.getExcluded().length > 0)
+                for (String excluded : dep.getExcluded())
                     exclude module: excluded
-                }
-            }
         }
-
-        if (dependency.annotationProc) {
-            annotationProcessor(dependency.fullDep)
+        else implementation(dep.getFullDep()) {
+            if (dep.getExcluded() != null && !Arrays.asList(dep.getExcluded()).isEmpty())
+                for (String excluded : dep.getExcluded())
+                    exclude module: excluded
         }
+        if (dep.getAnnotationProc()) annotationProcessor(dep.getFullDep())
     }
 }
 
-shadowJar {
-    dependencies {
-        for (Dependency dep : modDeps) {
-            if (dep.shade) {
-                include(dependency(dep.fullDep))
-            }
-        }
-    }
-
-    exclude("dummyThing")
-    exclude("module-info.class")
-
-    classifier = project.mod_classifier
-}
-
-reobf {
-    shadowJar {
-        mappingType = 'SEARGE'
+sourceSets {
+    main {
+        output.resourcesDir = output.classesDir
     }
 }
 
 jar {
-    DuplicatesStrategy.EXCLUDE
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest.attributes(
+            'FMLCorePlugin': 'xyz.matthewtgm.template.forge.TemplateLoadingPlugin',
+            'FMLCorePluginContainsFMLMod': true,
+            'ForceLoadAsMod': true
+    )
+    configurations.compile.extendsFrom(configurations.embed)
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
 }
 
 processResources {
+    inputs.files "src/main/resources"
+    outputs.dir "build/classes/main"
+    copy {
+        from("src/main/resources")
+        into("build/classes/main")
+    }
+
     inputs.property "version", project.version
     inputs.property "mcversion", project.minecraft.version
 
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
-                
-        expand 'version':project.version, 'mcversion':project.minecraft.version
+
+        expand 'version': project.version, 'mcversion': project.minecraft.version
     }
 
     from(sourceSets.main.resources.srcDirs) {
@@ -106,7 +117,19 @@ processResources {
     }
 }
 
-tasks.reobfJar.dependsOn(tasks.shadowJar)
+task fatJar(type: Jar) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    baseName = project.mod_name
+    from {
+        configurations.embed.collect {
+            it.isDirectory() ?
+                    it :
+                    zipTree(it)
+        }
+    } with jar
+}
+
+tasks.build.dependsOn(tasks.fatJar)
 
 /* Custom dependency stuff. */
 @SuppressWarnings("unused")

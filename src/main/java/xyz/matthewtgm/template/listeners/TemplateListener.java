@@ -1,6 +1,6 @@
-package ga.matthewtgm.template.listeners;
+package xyz.matthewtgm.template.listeners;
 
-import ga.matthewtgm.template.TemplateMod;
+import xyz.matthewtgm.template.TemplateMod;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

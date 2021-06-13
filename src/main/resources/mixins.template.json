@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "compatibilityLevel": "JAVA_8",
+  "verbose": true,
+  "package": "xyz.matthewtgm.template.mixins",
+  "refmap": "mixins.template.refmap.json",
+  "mixins": [
+  ]
+}

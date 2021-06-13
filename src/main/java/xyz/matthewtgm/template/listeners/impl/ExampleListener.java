@@ -8,7 +8,7 @@ public class ExampleListener extends TemplateListener {
 
     @SubscribeEvent
     protected void onChatReceived(ClientChatReceivedEvent event) {
-        logger.info("Chat message received!\t" + event.message.getUnformattedText());
+        logger.info("Chat message received! (\"{}\")", event.message.getUnformattedText());
     }
 
 }

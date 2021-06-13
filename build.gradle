@@ -1,70 +1,57 @@
-buildscript {
-    repositories {
-        jcenter()
-        maven {
-            name = "Forge"
-            url = "http://maven.minecraftforge.net"
-        }
-        maven {
-            name = "JitPack"
-            url = "https://jitpack.io"
-        }
-        maven {
-            name = "Sponge"
-            url = "https://repo.spongepowered.org/maven/"
-        }
-    }
-    dependencies {
-        classpath 'com.github.asbyth:ForgeGradle:f6500bf402'
-        classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
-    }
+/* Define Gradle plugins used in the project. */
+plugins {
+    id "net.minecraftforge.gradle.forge" version "f6500bf402"
+    id "com.github.johnrengelman.shadow" version "6.1.0"
+    id "org.spongepowered.mixin" version "0.6-SNAPSHOT"
+    id "java"
 }
-apply plugin: 'net.minecraftforge.gradle.forge'
-apply plugin: 'org.spongepowered.mixin'
 
 version = project.mod_ver
 group = project.mod_group
 archivesBaseName = project.mod_name
 
 sourceCompatibility = targetCompatibility = 1.8
+compileJava.options.encoding = 'UTF-8'
 
+/* Define project dependencies, automatically shaded, added as annotation processors or simply defined as an implementation based on the parameters entered per dependency. */
 Dependency[] deps = [
-        // Required
-        new Dependency("xyz.matthewtgm", "TGMLib", "1.3", false, (String[])["mixin"]),
-        new Dependency("xyz.matthewtgm", "JsonTGM", "1.2", true, (String[])["gson"]),
-        new Dependency("xyz.matthewtgm", "TGMConfig", "1.5", true),
+        new Dependency("xyz.matthewtgm", "TGMLib", "1.10", false, (String[]) ["mixin"]),
+        new Dependency("xyz.matthewtgm", "JsonTGM", "1.3.1", true, (String[]) ["gson"]),
+        new Dependency("xyz.matthewtgm", "TGMConfig", "1.7.3", true),
+        new Dependency("org.spongepowered", "mixin", "0.7.11-SNAPSHOT", false, (String[]) ["launchwrapper", "guava", "gson", "commons-io"], true),
         new Dependency("org.projectlombok", "lombok", "1.18.16", false, true)
 ]
 
+/* Define Minecraft options. Such as the Forge version, run directory and game mappings. */
 minecraft {
     version = project.forge_ver
     runDir = "run"
-
     replace("@VER@": project.version)
-
     mappings = project.mc_mappings
 }
 
+/* Add available repositories to areas where dependencies can be downloaded. */
 repositories {
+    mavenCentral()
     maven {
         name = "SpongePowered"
         url = 'https://repo.spongepowered.org/maven/'
     }
     maven {
         name = "JitPack"
-        url = 'https://jitpack.io'
+        url = 'https://jitpack.io/'
     }
-    mavenCentral()
-    jcenter()
 }
 
+/* Adds a configuration for shading libraries. */
 configurations {
-    embed
+    shade
 }
 
+/* Define dependencies, also where dependencies are automatically handled. */
 dependencies {
     for (Dependency dep : deps) {
-        if (dep.isShade()) embed(dep.getFullDep()) {
+        if (dep.isShade()) shade(dep.getFullDep()) {
             if (dep.getExcluded() != null && dep.getExcluded().length > 0)
                 for (String excluded : dep.getExcluded())
                     exclude module: excluded
@@ -78,31 +65,39 @@ dependencies {
     }
 }
 
-sourceSets {
-    main {
-        output.resourcesDir = output.classesDir
-    }
+/* Disable mixin refMap warnings. */
+mixin {
+    disableRefMapWarning = true
 }
 
+/* Set the duplicatesStrategy and define configs.  */
 jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest.attributes(
+            'MixinConfigs': 'mixins.template.json',
+            'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
             'FMLCorePlugin': 'xyz.matthewtgm.template.forge.TemplateLoadingPlugin',
             'FMLCorePluginContainsFMLMod': true,
             'ForceLoadAsMod': true
     )
-    configurations.compile.extendsFrom(configurations.embed)
     exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
 }
 
-processResources {
-    inputs.files "src/main/resources"
-    outputs.dir "build/classes/main"
-    copy {
-        from("src/main/resources")
-        into("build/classes/main")
-    }
+/* Makes the shade configuration work and re-define the duplicatesStrategy. */
+shadowJar {
+    configurations = [project.configurations.shade]
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set("")
+}
 
+/* Force the Gradle wrapper version and distrbution type. */
+wrapper {
+    gradleVersion = "6.1"
+    distributionType = Wrapper.DistributionType.ALL
+}
+
+/* Process the mcmod.info. */
+processResources {
     inputs.property "version", project.version
     inputs.property "mcversion", project.minecraft.version
 
@@ -117,19 +112,16 @@ processResources {
     }
 }
 
-task fatJar(type: Jar) {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    baseName = project.mod_name
-    from {
-        configurations.embed.collect {
-            it.isDirectory() ?
-                    it :
-                    zipTree(it)
-        }
-    } with jar
+/* Move the resources to the working directory for runs. */
+task moveResources {
+    doLast {
+        ant.move file: "${buildDir}/resources/main",
+                todir: "${buildDir}/classes/java"
+    }
 }
 
-tasks.build.dependsOn(tasks.fatJar)
+moveResources.dependsOn(processResources)
+classes.dependsOn(moveResources)
 
 /* Custom dependency stuff. */
 @SuppressWarnings("unused")
@@ -153,6 +145,7 @@ class Dependency {
 
         this.fullDep = group + ":" + name + ":" + version
     }
+
     Dependency(String group, String name, String version, boolean shade, String[] excluded) {
         this.group = group
         this.name = name
@@ -163,6 +156,7 @@ class Dependency {
 
         this.fullDep = group + ":" + name + ":" + version
     }
+
     Dependency(String group, String name, String version, boolean shade, boolean annotationProc) {
         this.group = group
         this.name = name
@@ -173,6 +167,7 @@ class Dependency {
 
         this.fullDep = group + ":" + name + ":" + version
     }
+
     Dependency(String group, String name, String version, boolean shade, String[] excluded, boolean annotationProc) {
         this.group = group
         this.name = name

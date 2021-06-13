@@ -1,0 +1,23 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        mavenLocal()
+        maven {
+            name = "Forge"
+            url = "https://maven.minecraftforge.net/"
+        }
+        maven {
+            name = "Jitpack"
+            url = "https://jitpack.io/"
+        }
+    }
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == "net.minecraftforge.gradle.forge") useModule("com.github.asbyth:ForgeGradle:${requested.version}")
+            if (requested.id.id == "org.spongepowered.mixin") useModule("com.github.LXGaming:MixinGradle:${requested.version}")
+        }
+    }
+}
+
+rootProject.name = "Forge Mod Template"

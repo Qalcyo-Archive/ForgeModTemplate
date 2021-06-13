@@ -1,6 +1,6 @@
 /* Define Gradle plugins used in the project. */
 plugins {
-    id "net.minecraftforge.gradle.forge" version "f6500bf402"
+    id "net.minecraftforge.gradle.forge" version "6f5327738d"
     id "com.github.johnrengelman.shadow" version "6.1.0"
     id "org.spongepowered.mixin" version "0.6-SNAPSHOT"
     id "java"

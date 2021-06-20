@@ -113,15 +113,19 @@ reobf {
 
 /* Process the mcmod.info. */
 processResources {
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
-
+    inputs.property 'version', project.version
+    inputs.property 'mcversion', project.minecraft.version
+    inputs.property 'name', mod_name
+    inputs.property 'modid', mod_id
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
-
-        expand 'version': project.version, 'mcversion': project.minecraft.version
+        expand (
+                'version':project.version,
+                'mcversion':project.minecraft.version,
+                'name':mod_name,
+                'modid': mod_id
+        )
     }
-
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
     }

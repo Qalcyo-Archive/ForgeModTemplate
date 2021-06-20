@@ -6,28 +6,19 @@ plugins {
     id "java"
 }
 
-version = project.mod_ver
-group = project.mod_group
-archivesBaseName = project.mod_name
+version = mod_ver
+group = mod_group
+archivesBaseName = "${mod_name} (${mod_ver})"
 
 sourceCompatibility = targetCompatibility = 1.8
 compileJava.options.encoding = 'UTF-8'
 
-/* Define project dependencies, automatically shaded, added as annotation processors or simply defined as an implementation based on the parameters entered per dependency. */
-Dependency[] deps = [
-        new Dependency("xyz.matthewtgm", "TGMLib", "1.10", false, (String[]) ["mixin"]),
-        new Dependency("xyz.matthewtgm", "JsonTGM", "1.3.1", true, (String[]) ["gson"]),
-        new Dependency("xyz.matthewtgm", "TGMConfig", "1.7.3", true),
-        new Dependency("org.spongepowered", "mixin", "0.7.11-SNAPSHOT", false, (String[]) ["launchwrapper", "guava", "gson", "commons-io"], true),
-        new Dependency("org.projectlombok", "lombok", "1.18.16", false, true)
-]
-
 /* Define Minecraft options. Such as the Forge version, run directory and game mappings. */
 minecraft {
-    version = project.forge_ver
+    version = forge_ver
     runDir = "run"
     replace("@VER@": project.version)
-    mappings = project.mc_mappings
+    mappings = mc_mappings
 }
 
 /* Add available repositories to areas where dependencies can be downloaded. */
@@ -46,32 +37,41 @@ repositories {
 /* Adds a configuration for shading libraries. */
 configurations {
     shade
+    implementation.extendsFrom(shade)
 }
 
 /* Define dependencies, also where dependencies are automatically handled. */
 dependencies {
-    for (Dependency dep : deps) {
-        if (dep.isShade()) shade(dep.getFullDep()) {
-            if (dep.getExcluded() != null && dep.getExcluded().length > 0)
-                for (String excluded : dep.getExcluded())
-                    exclude module: excluded
-        }
-        else implementation(dep.getFullDep()) {
-            if (dep.getExcluded() != null && !Arrays.asList(dep.getExcluded()).isEmpty())
-                for (String excluded : dep.getExcluded())
-                    exclude module: excluded
-        }
-        if (dep.getAnnotationProc()) annotationProcessor(dep.getFullDep())
+    implementation('xyz.matthewtgm:TGMLib:1.10') {
+        exclude module: 'mixin'
     }
+
+    shade('xyz.matthewtgm:JsonTGM:1.7.1') {
+        exclude module: 'gson'
+    }
+    shade('xyz.matthewtgm:TGMConfig:1.7.3')
+
+    shade('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
+        exclude module: 'gson'
+        exclude module: 'guava'
+        exclude module: 'launchwrapper'
+        exclude module: 'commons-io'
+    }
+    annotationProcessor('org.spongepowered:mixin:0.7.11-SNAPSHOT')
+    implementation('org.projectlombok:lombok:1.18.16')
+    annotationProcessor('org.projectlombok:lombok:1.18.16')
 }
 
 /* Disable mixin refMap warnings. */
 mixin {
     disableRefMapWarning = true
+    add sourceSets.main, 'mixins.template.refmap.json'
 }
 
-/* Set the duplicatesStrategy and define configs.  */
+/* Set the duplicatesStrategy and define configs. */
 jar {
+    archiveName = "${archivesBaseName}.jar"
+    enabled = false
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest.attributes(
             'MixinConfigs': 'mixins.template.json',
@@ -83,17 +83,32 @@ jar {
     exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
 }
 
+/* Disabled source jars. */
+sourceJar {
+    enabled = false
+}
+
 /* Makes the shade configuration work and re-define the duplicatesStrategy. */
 shadowJar {
     configurations = [project.configurations.shade]
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    archiveClassifier.set("")
+
+    archiveBaseName.set(archivesBaseName)
+    archiveVersion.set('')
+    archiveClassifier.set('')
 }
 
-/* Force the Gradle wrapper version and distrbution type. */
+/* Force the Gradle wrapper version and distribution type. */
 wrapper {
-    gradleVersion = "6.1"
+    gradleVersion = "6.8.1"
     distributionType = Wrapper.DistributionType.ALL
+}
+
+/* Make shadow reobfuscate using SEARGE. */
+reobf {
+    shadowJar {
+        mappingType = 'SEARGE'
+    }
 }
 
 /* Process the mcmod.info. */
@@ -122,61 +137,4 @@ task moveResources {
 
 moveResources.dependsOn(processResources)
 classes.dependsOn(moveResources)
-
-/* Custom dependency stuff. */
-@SuppressWarnings("unused")
-class Dependency {
-
-    String group
-    String name
-    String version
-    String[] excluded
-    boolean shade
-    boolean annotationProc
-    final String fullDep
-
-    Dependency(String group, String name, String version, boolean shade) {
-        this.group = group
-        this.name = name
-        this.version = version
-        this.shade = shade
-        this.excluded = []
-        this.annotationProc = false
-
-        this.fullDep = group + ":" + name + ":" + version
-    }
-
-    Dependency(String group, String name, String version, boolean shade, String[] excluded) {
-        this.group = group
-        this.name = name
-        this.version = version
-        this.shade = shade
-        this.excluded = excluded
-        this.annotationProc = false
-
-        this.fullDep = group + ":" + name + ":" + version
-    }
-
-    Dependency(String group, String name, String version, boolean shade, boolean annotationProc) {
-        this.group = group
-        this.name = name
-        this.version = version
-        this.shade = shade
-        this.excluded = []
-        this.annotationProc = annotationProc
-
-        this.fullDep = group + ":" + name + ":" + version
-    }
-
-    Dependency(String group, String name, String version, boolean shade, String[] excluded, boolean annotationProc) {
-        this.group = group
-        this.name = name
-        this.version = version
-        this.shade = shade
-        this.excluded = excluded
-        this.annotationProc = annotationProc
-
-        this.fullDep = group + ":" + name + ":" + version
-    }
-
-}
+reobfJar.dependsOn(shadowJar)

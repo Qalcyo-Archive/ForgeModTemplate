@@ -16,14 +16,13 @@
  * along with Terbium. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package xyz.matthewtgm.lib;
+package xyz.matthewtgm.tgmlib;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.LogManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,7 +41,8 @@ public class TGMLibInstaller {
     private static final Gson gson = new Gson();
 
     private static final String versions_url = "https://raw.githubusercontent.com/TGMDevelopment/TGMLib-Data/main/versions.json";
-    private static final String className = "xyz.matthewtgm.lib.TGMLib";
+    private static final String className = "xyz.matthewtgm.tgmlib.TGMLib";
+    private static boolean initialized;
     private static File dataDir;
 
     public static boolean isInitialized() {
@@ -58,6 +58,28 @@ public class TGMLibInstaller {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public static boolean isLoaded() {
+        return initialized;
+    }
+
+    public static void load(File gameDir) {
+        if (!isLoaded())
+            return;
+
+        try {
+            Class<?> tgmLib = Class.forName(className);
+            Method instance = tgmLib.getDeclaredMethod("getInstance");
+            System.out.println(instance);
+            Method initialize = tgmLib.getDeclaredMethod("initialize", File.class);
+            System.out.println(initialize);
+            initialize.invoke(instance.invoke(null), gameDir);
+            System.out.println("Loaded TGMLib successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("Did NOT load TGMLib successfully.");
     }
 
     public static ReturnValue initialize(File gameDir) {
@@ -94,6 +116,7 @@ public class TGMLibInstaller {
 
         addToClasspath(tgmLibFile);
 
+        initialized = true;
         if (!isInitialized())
             return ReturnValue.FAILED;
         return ReturnValue.SUCCESSFUL;
@@ -127,7 +150,7 @@ public class TGMLibInstaller {
     private static boolean download(String url, String version, File file) {
         url = url.replace(" ", "%20");
 
-        LogManager.getLogger("TGMLibInstaller").info("Downloading TGMLib...\n(URL: " + url + ")");
+        System.out.println("Downloading TGMLib...\n(URL: " + url + ")");
 
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -199,7 +222,7 @@ public class TGMLibInstaller {
                 connection.disconnect();
         }
 
-        LogManager.getLogger("TGMLibInstaller").info("Finished downloading TGMLib!");
+        System.out.println("Finished downloading TGMLib!");
 
         frame.dispose();
         return true;
@@ -208,6 +231,7 @@ public class TGMLibInstaller {
     private static void addToClasspath(File file) {
         try {
             URL url = file.toURI().toURL();
+            System.out.println(url);
 
             ClassLoader classLoader = TGMLibInstaller.class.getClassLoader();
             Method method = classLoader.getClass().getDeclaredMethod("addURL", URL.class);

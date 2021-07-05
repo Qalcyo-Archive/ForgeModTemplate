@@ -17,7 +17,9 @@ compileJava.options.encoding = 'UTF-8'
 minecraft {
     version = forge_ver
     runDir = "run"
-    replace("@VER@": project.version)
+    replace('@NAME@', mod_name)
+    replace('@VER@': mod_ver)
+    replace('@ID@', mod_id)
     mappings = mc_mappings
 }
 
@@ -42,15 +44,12 @@ configurations {
 
 /* Define dependencies, also where dependencies are automatically handled. */
 dependencies {
-    implementation('xyz.matthewtgm:TGMLib:1.10') {
-        exclude module: 'mixin'
-    }
+    implementation('xyz.matthewtgm:TGMLib:2.1.6')
+    shade('xyz.matthewtgm:JsonTGM:2.2.5')
+    shade('xyz.matthewtgm:TGMConfig:2.2')
 
-    shade('xyz.matthewtgm:JsonTGM:1.7.1') {
-        exclude module: 'gson'
-    }
-    shade('xyz.matthewtgm:TGMConfig:1.7.3')
-
+    implementation('org.projectlombok:lombok:1.18.16')
+    annotationProcessor('org.projectlombok:lombok:1.18.16')
     shade('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
         exclude module: 'gson'
         exclude module: 'guava'
@@ -58,8 +57,6 @@ dependencies {
         exclude module: 'commons-io'
     }
     annotationProcessor('org.spongepowered:mixin:0.7.11-SNAPSHOT')
-    implementation('org.projectlombok:lombok:1.18.16')
-    annotationProcessor('org.projectlombok:lombok:1.18.16')
 }
 
 /* Disable mixin refMap warnings. */

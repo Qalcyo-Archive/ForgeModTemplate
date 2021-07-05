@@ -20,4 +20,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "Forge Mod Template"
+rootProject.name = mod_name

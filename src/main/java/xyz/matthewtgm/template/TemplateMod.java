@@ -20,7 +20,7 @@ public class TemplateMod {
     private static final TemplateModManager manager = new TemplateModManager();
 
     @Mod.EventHandler
-    protected void onInit(FMLInitializationEvent event) {
+    protected void initialize(FMLInitializationEvent event) {
         TGMLibInstaller.load(Minecraft.getMinecraft().mcDataDir);
         ForgeHelper.registerEventListeners(new ExampleListener());
     }

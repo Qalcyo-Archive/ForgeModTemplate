@@ -44,18 +44,11 @@ configurations {
 
 /* Define dependencies, also where dependencies are automatically handled. */
 dependencies {
-    implementation('xyz.matthewtgm:TGMLib:2.5.2')
-    shade('xyz.matthewtgm:JsonTGM:2.6.3')
-    shade('xyz.matthewtgm:TGMConfig:2.3')
+    implementation('xyz.matthewtgm:TGMLib:2.8')
+    shade('xyz.matthewtgm:TGMLibLaunchwrapper:1.5')
 
     implementation('org.projectlombok:lombok:1.18.16')
     annotationProcessor('org.projectlombok:lombok:1.18.16')
-    shade('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
-        exclude module: 'gson'
-        exclude module: 'guava'
-        exclude module: 'launchwrapper'
-        exclude module: 'commons-io'
-    }
     annotationProcessor('org.spongepowered:mixin:0.7.11-SNAPSHOT')
 }
 
@@ -67,7 +60,7 @@ mixin {
 
 /* Set the duplicatesStrategy and define configs. */
 jar {
-    archiveName = "${archivesBaseName}.jar"
+    archiveFileName = "${archivesBaseName}.jar"
     enabled = false
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest.attributes(

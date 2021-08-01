@@ -1,23 +1,18 @@
 package xyz.matthewtgm.template.forge;
 
-import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-import xyz.matthewtgm.tgmlib.TGMLibInstaller;
+import xyz.matthewtgm.tgmlib.launchwrapper.TGMLibLaunchwrapper;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class TemplateLoadingPlugin implements IFMLLoadingPlugin {
 
     @Override
     public String[] getASMTransformerClass() {
-        TGMLibInstaller.ReturnValue tgmLibInitialized = TGMLibInstaller.initialize(Launch.minecraftHome);
-        if (tgmLibInitialized != TGMLibInstaller.ReturnValue.SUCCESSFUL)
-            System.out.println("Failed to load TGMLib.");
-        else
-            System.out.println("Loaded TGMLib successfully.");
-
-        if (TGMLibInstaller.isLoaded())
-            return new String[] {"xyz.matthewtgm.tgmlib.tweaker.TGMLibClassTransformer"};
+        List<String> classTransformers = new ArrayList<>();
+        TGMLibLaunchwrapper.quickInject(classTransformers);
         return new String[0];
     }
 
@@ -32,9 +27,7 @@ public class TemplateLoadingPlugin implements IFMLLoadingPlugin {
     }
 
     @Override
-    public void injectData(Map<String, Object> map) {
-
-    }
+    public void injectData(Map<String, Object> map) {}
 
     @Override
     public String getAccessTransformerClass() {

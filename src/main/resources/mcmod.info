@@ -1,14 +1,18 @@
-[{
-  "modid": "${modid}",
-  "name": "${name}",
-  "description": "",
-  "version": "${version}",
-  "mcversion": "${mcversion}",
-  "url": "",
-  "updateUrl": "",
-  "authorList": ["TGMDevelopment"],
-  "credits": "",
-  "logoFile": "",
-  "screenshots": [],
-  "dependencies": []
-}]
+[
+  {
+    "modid": "${modid}",
+    "name": "${name}",
+    "description": "",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": [
+      "Qalcyo"
+    ],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]

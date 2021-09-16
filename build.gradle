@@ -1,107 +1,51 @@
-/* Define Gradle plugins used in the project. */
 plugins {
-    id "net.minecraftforge.gradle.forge" version "6f5327738d"
-    id "com.github.johnrengelman.shadow" version "6.1.0"
-    id "org.spongepowered.mixin" version "0.6-SNAPSHOT"
     id "java"
+    id "com.github.johnrengelman.shadow" version "6.1.0"
+    id "net.minecraftforge.gradle.forge" version "ddb1eb0"
 }
 
 version = mod_ver
-group = mod_group
-archivesBaseName = "${mod_name} (${mod_ver})"
+group = "xyz.qalcyo"
+archivesBaseName = mod_name
 
 sourceCompatibility = targetCompatibility = 1.8
 compileJava.options.encoding = 'UTF-8'
 
-/* Define Minecraft options. Such as the Forge version, run directory and game mappings. */
 minecraft {
-    version = forge_ver
+    version = "1.8.9-11.15.1.2318-1.8.9"
     runDir = "run"
     replace('@NAME@', mod_name)
     replace('@VER@': mod_ver)
     replace('@ID@', mod_id)
-    mappings = mc_mappings
+    mappings = "stable_22"
+    makeObfSourceJar = false
+    clientRunArgs += '--tweakClass xyz.matthewtgm.requisite.launchwrapper.RequisiteLaunchwrapper'
 }
 
-/* Add available repositories to areas where dependencies can be downloaded. */
+configurations {
+    // Creates an extra configuration that implements `implementation` to be used later as the configuration that shades libraries
+    include
+    implementation.extendsFrom(include)
+}
+
 repositories {
     mavenCentral()
-    maven {
-        name = "SpongePowered"
-        url = 'https://repo.spongepowered.org/maven/'
-    }
-    maven {
-        name = "JitPack"
-        url = 'https://jitpack.io/'
-    }
+    maven { url 'https://repo.sk1er.club/repository/maven-releases/' }
+    maven { url 'https://jitpack.io/' }
+    maven { url 'https://repo.spongepowered.org/repository/maven-public/' }
 }
 
-/* Adds a configuration for shading libraries. */
-configurations {
-    shade
-    implementation.extendsFrom(shade)
-}
-
-/* Define dependencies, also where dependencies are automatically handled. */
 dependencies {
-    implementation('xyz.matthewtgm:TGMLib:2.8')
-    shade('xyz.matthewtgm:TGMLibLaunchwrapper:1.5')
-
-    implementation('org.projectlombok:lombok:1.18.16')
-    annotationProcessor('org.projectlombok:lombok:1.18.16')
-    annotationProcessor('org.spongepowered:mixin:0.7.11-SNAPSHOT')
-}
-
-/* Disable mixin refMap warnings. */
-mixin {
-    disableRefMapWarning = true
-    add sourceSets.main, 'mixins.template.refmap.json'
-}
-
-/* Set the duplicatesStrategy and define configs. */
-jar {
-    archiveFileName = "${archivesBaseName}.jar"
-    enabled = false
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    manifest.attributes(
-            'MixinConfigs': 'mixins.template.json',
-            'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
-            'FMLCorePlugin': 'xyz.matthewtgm.template.forge.TemplateLoadingPlugin',
-            'FMLCorePluginContainsFMLMod': true,
-            'ForceLoadAsMod': true
-    )
-    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
-}
-
-/* Disabled source jars. */
-sourceJar {
-    enabled = false
-}
-
-/* Makes the shade configuration work and re-define the duplicatesStrategy. */
-shadowJar {
-    configurations = [project.configurations.shade]
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    archiveBaseName.set(archivesBaseName)
-    archiveVersion.set('')
-    archiveClassifier.set('')
-}
-
-/* Force the Gradle wrapper version and distribution type. */
-wrapper {
-    gradleVersion = "6.8.1"
-    distributionType = Wrapper.DistributionType.ALL
-}
-
-/* Make shadow reobfuscate using SEARGE. */
-reobf {
-    shadowJar {
-        mappingType = 'SEARGE'
+    // How to normally add a dependency (If you don't want it to be added to the jar)
+    // implementation "com.example:example:1.0.0"
+    // If you would like to include it (have the library inside your jar) instead use
+    // include "com.example:example:1.0.0"
+    implementation 'xyz.matthewtgm:Requisite:1.1.1'
+    include ('xyz.matthewtgm:RequisiteLaunchwrapper:1.1') {
+        transitive = false
     }
 }
 
-/* Process the mcmod.info. */
 processResources {
     inputs.property 'version', project.version
     inputs.property 'mcversion', project.minecraft.version
@@ -120,8 +64,17 @@ processResources {
         exclude 'mcmod.info'
     }
 }
-
-/* Move the resources to the working directory for runs. */
+jar {
+    manifest.attributes(
+            'ModSide': 'CLIENT',
+            'ForceLoadAsMod': true,
+            'TweakClass': 'xyz.matthewtgm.requisite.launchwrapper.RequisiteLaunchwrapper',
+    )
+    enabled = false
+}
+/**
+ * This task simply moves resources so they can be accessed at runtime, Forge is quite weird isn't it
+ */
 task moveResources {
     doLast {
         ant.move file: "${buildDir}/resources/main",
@@ -129,6 +82,36 @@ task moveResources {
     }
 }
 
-moveResources.dependsOn(processResources)
-classes.dependsOn(moveResources)
-reobfJar.dependsOn(shadowJar)
+moveResources.dependsOn processResources
+classes.dependsOn moveResources
+// This adds support to ("embed", "shade", "include") libraries into our JAR
+shadowJar {
+    archiveClassifier.set('')
+    configurations = [project.configurations.include]
+    duplicatesStrategy DuplicatesStrategy.EXCLUDE
+    exclude 'LICENSE.md'
+    exclude 'pack.mcmeta'
+    exclude 'dummyThing'
+    exclude '**/module-info.class'
+    exclude '*.so'
+    exclude '*.dylib'
+    exclude '*.dll'
+    exclude '*.jnilib'
+    exclude 'ibxm/**'
+    exclude 'com/jcraft/**'
+    exclude 'org/lwjgl/**'
+    exclude 'net/java/**'
+
+    exclude 'META-INF/proguard/**'
+    exclude 'META-INF/maven/**'
+    exclude 'META-INF/versions/**'
+    exclude 'META-INF/com.android.tools/**'
+
+    exclude 'fabric.mod.json'
+}
+reobf {
+    shadowJar {
+        classpath = sourceSets.main.compileClasspath
+    }
+}
+tasks.reobfJar.dependsOn tasks.shadowJar

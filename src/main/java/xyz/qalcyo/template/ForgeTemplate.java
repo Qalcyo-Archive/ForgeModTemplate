@@ -12,7 +12,7 @@ import java.io.File;
 
 @Mod(name = ForgeTemplate.NAME, version = ForgeTemplate.VER, modid = ForgeTemplate.ID)
 public class ForgeTemplate {
-    public static final String NAME = "Qaltils", VER = "1.0.0", ID = "qaltils";
+    public static final String NAME = "@NAME@", VER = "@VER@", ID = "@ID@";
     public static File jarFile;
     public static File modDir = new File(new File(new File(Minecraft.getMinecraft().mcDataDir, "config"), "Qalcyo"), NAME);
     public static void sendMessage(String message) {

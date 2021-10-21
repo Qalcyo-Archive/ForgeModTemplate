@@ -12,9 +12,12 @@ pluginManagement {
             url = "https://jitpack.io/"
         }
     }
+
     resolutionStrategy {
         eachPlugin {
-            if (requested.id.id == "net.minecraftforge.gradle.forge") useModule("com.github.asbyth:ForgeGradle:${requested.version}")
+            if (requested.id.id == "net.minecraftforge.gradle.forge") {
+                useModule("com.github.asbyth:ForgeGradle:${requested.version}")
+            }
         }
     }
 }

@@ -1,8 +1,4 @@
-<div align="center">
-
 # Template
-
-</div>
 
 ## About
 Placeholder.

@@ -5,14 +5,12 @@ gradle-app.setting
 !gradle-wrapper.jar
 .gradletasknamecache
 
-
 # IntelliJ
 /.idea/
 /output/
 *.iml
 *.ipr
 *.iws
-
 
 # Minecraft
 /run/

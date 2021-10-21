@@ -1,11 +1,11 @@
 plugins {
-    id "java"
-    id "com.github.johnrengelman.shadow" version "6.1.0"
     id "net.minecraftforge.gradle.forge" version "ddb1eb0"
+    id "com.github.johnrengelman.shadow" version "6.1.0"
+    id "java"
 }
 
-version = mod_ver
-group = "xyz.qalcyo"
+version = mod_version
+group = mod_group
 archivesBaseName = mod_name
 
 sourceCompatibility = targetCompatibility = 1.8
@@ -14,81 +14,105 @@ compileJava.options.encoding = 'UTF-8'
 minecraft {
     version = "1.8.9-11.15.1.2318-1.8.9"
     runDir = "run"
+
     replace('@NAME@', mod_name)
-    replace('@VER@': mod_ver)
+    replace('@VER@': mod_version)
     replace('@ID@', mod_id)
+
     mappings = "stable_22"
     makeObfSourceJar = false
-    clientRunArgs += '--tweakClass xyz.matthewtgm.requisite.launchwrapper.RequisiteLaunchwrapper'
+    clientRunArgs += '--tweakClass xyz.qalcyo.requisite.installer.RequisiteInstaller'
 }
 
 configurations {
-    // Creates an extra configuration that implements `implementation` to be used later as the configuration that shades libraries
-    include
-    implementation.extendsFrom(include)
+    /* Creates an extra dependency configuration that implements `implementation`, */
+    /* to be used later to shade libraries. */
+
+    shade
+    implementation.extendsFrom(shade)
 }
 
 repositories {
     mavenCentral()
-    maven { url 'https://repo.sk1er.club/repository/maven-releases/' }
-    maven { url 'https://jitpack.io/' }
-    maven { url 'https://repo.spongepowered.org/repository/maven-public/' }
+    mavenLocal()
+
+    maven {
+        name = 'Qalcyo'
+        url = 'http://maven.deftu.xyz/repository/maven-public/'
+        allowInsecureProtocol = true
+    }
+    maven {
+        name = 'Sk1erLLC'
+        url = 'https://repo.sk1er.club/repository/maven-releases/'
+    }
+    maven {
+        name = 'Jitpack'
+        url = 'https://jitpack.io/'
+    }
+    maven {
+        name = 'Spongepowered'
+        url = 'https://repo.spongepowered.org/repository/maven-public/'
+    }
 }
 
 dependencies {
-    // How to normally add a dependency (If you don't want it to be added to the jar)
-    // implementation "com.example:example:1.0.0"
-    // If you would like to include it (have the library inside your jar) instead use
-    // include "com.example:example:1.0.0"
-    implementation 'xyz.matthewtgm:Requisite:1.1.1'
-    include ('xyz.matthewtgm:RequisiteLaunchwrapper:1.1') {
-        transitive = false
-    }
+    /* If you'd like access to a dependency's source (for example, another mod) use the method below: */
+    /* implementation('com.example.package:example:1.0.0') */
+
+    /* If you'd rather like your dependency to be inside your built JAR file, use: */
+    /* shade('com.example.package:example:1.0.0') */
+
+    implementation('xyz.qalcyo.requisite:Requisite:2.0-beta1')
+    shade('xyz.qalcyo.requisite:RequisiteInstaller:1.2')
 }
 
 processResources {
-    inputs.property 'version', project.version
-    inputs.property 'mcversion', project.minecraft.version
-    inputs.property 'name', mod_name
-    inputs.property 'modid', mod_id
+    inputs.property "name", mod_name
+    inputs.property "version", mod_version
+    inputs.property "id", mod_id
+    inputs.property "mcversion", minecraft.version
+
     from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-        expand (
-                'version':project.version,
-                'mcversion':project.minecraft.version,
-                'name':mod_name,
-                'modid': mod_id
+        include "mcmod.info"
+
+        expand(
+                "name": mod_name,
+                "version": mod_version,
+                "id": mod_id,
+                "mcversion": minecraft.version
         )
     }
+
     from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
-    }
-}
-jar {
-    manifest.attributes(
-            'ModSide': 'CLIENT',
-            'ForceLoadAsMod': true,
-            'TweakClass': 'xyz.matthewtgm.requisite.launchwrapper.RequisiteLaunchwrapper',
-    )
-    enabled = false
-}
-/**
- * This task simply moves resources so they can be accessed at runtime, Forge is quite weird isn't it
- */
-task moveResources {
-    doLast {
-        ant.move file: "${buildDir}/resources/main",
-                todir: "${buildDir}/classes/java"
+        exclude "mcmod.info"
     }
 }
 
-moveResources.dependsOn processResources
-classes.dependsOn moveResources
-// This adds support to ("embed", "shade", "include") libraries into our JAR
+jar {
+    enabled = false
+
+    manifest.attributes(
+            'ModSide': 'CLIENT',
+            'ForceLoadAsMod': true,
+            'TweakClass': 'xyz.qalcyo.requisite.installer.RequisiteInstaller',
+    )
+}
+
+task moveResources {
+    doLast {
+        try {
+            ant.move file: "${buildDir}/resources/main", todir: "${buildDir}/classes/java"
+        } catch (Exception e) {
+            e.printStackTrace()
+        }
+    }
+}
+
 shadowJar {
     archiveClassifier.set('')
-    configurations = [project.configurations.include]
+    configurations = [project.configurations.shade]
     duplicatesStrategy DuplicatesStrategy.EXCLUDE
+
     exclude 'LICENSE.md'
     exclude 'pack.mcmeta'
     exclude 'dummyThing'
@@ -109,9 +133,13 @@ shadowJar {
 
     exclude 'fabric.mod.json'
 }
+
 reobf {
     shadowJar {
         classpath = sourceSets.main.compileClasspath
     }
 }
-tasks.reobfJar.dependsOn tasks.shadowJar
+
+moveResources.dependsOn(processResources)
+classes.dependsOn(moveResources)
+reobfJar.dependsOn(shadowJar)

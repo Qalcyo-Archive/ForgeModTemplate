@@ -21,6 +21,8 @@ minecraft {
 
     mappings = "stable_22"
     makeObfSourceJar = false
+
+    clientRunArgs += '--tweakClass xyz.qalcyo.requisite.core.dev.RequisiteDeveloperTweaker'
     clientRunArgs += '--tweakClass xyz.qalcyo.requisite.installer.RequisiteInstaller'
 }
 

@@ -80,28 +80,6 @@ dependencies {
     */
 }
 
-processResources {
-    inputs.property "name", mod_name
-    inputs.property "version", mod_version
-    inputs.property "id", mod_id
-    inputs.property "mcversion", minecraft.version
-
-    from(sourceSets.main.resources.srcDirs) {
-        include "mcmod.info"
-
-        expand(
-                "name": mod_name,
-                "version": mod_version,
-                "id": mod_id,
-                "mcversion": minecraft.version
-        )
-    }
-
-    from(sourceSets.main.resources.srcDirs) {
-        exclude "mcmod.info"
-    }
-}
-
 jar {
     enabled = false
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -147,6 +125,24 @@ shadowJar {
     exclude 'META-INF/com.android.tools/**'
 
     exclude 'fabric.mod.json'
+}
+
+processResources {
+    inputs.property "id", mod_id
+    inputs.property "name", mod_name
+    inputs.property "version", mod_version
+    inputs.property "mcversion", minecraft.version
+
+    filesMatching("mcmod.info") {
+        expand(
+                "id": mod_id,
+                "name": mod_name,
+                "version": project.version,
+                "mcversion": minecraft.version
+        )
+    }
+
+    rename '(.+_at.cfg)', 'META-INF/$1'
 }
 
 reobf {

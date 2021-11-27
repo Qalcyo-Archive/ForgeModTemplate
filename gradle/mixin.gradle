@@ -1,0 +1,16 @@
+apply plugin: 'org.spongepowered.mixin'
+
+mixin {
+    disableRefMapWarning = true
+    add(sourceSets.main, "mixins.${mod_id}.refmap.json")
+}
+
+sourceSets {
+    main {
+        ext.refMap = "mixins.${mod_id}.refmap.json"
+    }
+}
+
+dependencies {
+    annotationProcessor('org.spongepowered:mixin:0.7.11-SNAPSHOT')
+}

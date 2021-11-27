@@ -3,6 +3,7 @@ pluginManagement {
         gradlePluginPortal()
         mavenCentral()
         mavenLocal()
+
         maven {
             name = "Forge"
             url = "https://maven.minecraftforge.net/"
@@ -10,14 +11,6 @@ pluginManagement {
         maven {
             name = "Jitpack"
             url = "https://jitpack.io/"
-        }
-    }
-
-    resolutionStrategy {
-        eachPlugin {
-            if (requested.id.id == "net.minecraftforge.gradle.forge") {
-                useModule("com.github.asbyth:ForgeGradle:${requested.version}")
-            }
         }
     }
 }

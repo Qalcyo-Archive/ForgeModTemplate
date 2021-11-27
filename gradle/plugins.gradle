@@ -1,0 +1,16 @@
+repositories {
+    maven {
+        url = 'https://maven.minecraftforge.net/'
+    }
+    maven {
+        url = 'https://jitpack.io/'
+    }
+    maven {
+        url = 'https://repo.spongepowered.org/maven/'
+    }
+}
+
+dependencies {
+    classpath('com.github.ReplayMod:ForgeGradle:FG_2.1-SNAPSHOT:all')
+    classpath('dev.isXander:MixinGradle:0.6-SNAPSHOT')
+}

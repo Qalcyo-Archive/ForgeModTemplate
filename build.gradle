@@ -104,6 +104,7 @@ processResources {
 
 jar {
     enabled = false
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     manifest.attributes(
             'ModSide': 'CLIENT',

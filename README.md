@@ -1,2 +1,1 @@
-# Template
-![Crimson](https://img.shields.io/badge/Requires-Crimson-red?style=for-the-badge)
+# Minecraft mod template, this is still usable but will not be updated.
